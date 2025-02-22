@@ -1,0 +1,36 @@
+{
+  "books": [
+    {
+      "id": "739f",
+      "title": "The Great Gatsby",
+      "author": "F. Scott Fitzgerald",
+      "publisher": "Scribner",
+      "publishedDate": "1925-04-10",
+      "isbn": "9780743273565"
+    },
+    {
+      "title": "To Kill a Mockingbird",
+      "author": "Harper Le-e",
+      "publisher": "J.B. Lippincott & Co.",
+      "publishedDate": "1960-07-11",
+      "isbn": "9780061120084",
+      "id": "4462"
+    },
+    {
+      "id": "7015",
+      "title": "Pride and Prejudice",
+      "author": "Jane Austen",
+      "publisher": "T. Egerton, Whitehall",
+      "publishedDate": "1813-01-28",
+      "isbn": "9781853260001"
+    },
+    {
+      "id": "b787",
+      "title": "1984",
+      "author": "George Orwell",
+      "publisher": "Secker & Warburg",
+      "publishedDate": "1949-06-08",
+      "isbn": "9780451524935"
+    }
+  ]
+}

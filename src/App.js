@@ -2,7 +2,9 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Container, Form, Button, Table, Tabs, Tab, Modal } from 'react-bootstrap';
 import { FaEdit, FaTrash } from 'react-icons/fa';
+import { ToastContainer, toast } from 'react-toastify';
 import 'bootstrap/dist/css/bootstrap.min.css';
+import 'react-toastify/dist/ReactToastify.css';
 
 const App = () => {
   const [books, setBooks] = useState([]);
@@ -21,10 +23,11 @@ const App = () => {
 
   const fetchBooks = async () => {
     try {
-      const response = await axios.get('https://localhost:5000/books');
+      const response = await axios.get('http://localhost:8080/books');
       setBooks(response.data);
     } catch (error) {
       console.error('Error fetching books:', error);
+      toast.error('Failed to fetch books. Please try again.');
     }
   };
 
@@ -33,15 +36,39 @@ const App = () => {
     const book = { title, author, publisher, publishedDate, isbn };
     try {
       if (editBook) {
-        await axios.put(`https://localhost:5000/books/${editBook.isbn}`, book);
+        await axios.put(`http://localhost:8080/books/${editBook.id}`, { ...book, id: editBook.id });
+        toast.success('Book updated successfully!');
       } else {
-        await axios.post('https://localhost:5000/books', book);
+        await axios.post('http://localhost:8080/books', book);
+        toast.success('Book added successfully!');
       }
       fetchBooks();
       resetForm();
       setShowModal(false);
     } catch (error) {
       console.error('Error saving book:', error);
+      toast.error('Failed to save the book. Please try again.');
+    }
+  };
+
+  const handleEdit = (book) => {
+    setEditBook(book);
+    setTitle(book.title);
+    setAuthor(book.author);
+    setPublisher(book.publisher);
+    setPublishedDate(book.publishedDate);
+    setIsbn(book.isbn);
+    setShowModal(true);
+  };
+
+  const handleDelete = async (id) => {
+    try {
+      await axios.delete(`http://localhost:8080/books/${id}`);
+      fetchBooks();
+      toast.success('Book deleted successfully!');
+    } catch (error) {
+      console.error('Error deleting book:', error);
+      toast.error('Failed to delete the book. Please try again.');
     }
   };
 
@@ -54,7 +81,6 @@ const App = () => {
     setEditBook(null);
   };
 
-  // Filter books based on the search term
   const filteredBooks = books.filter(book =>
     book.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
     book.author.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -64,6 +90,18 @@ const App = () => {
 
   return (
     <div>
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+      />
+
       <div style={{
         backgroundImage: 'linear-gradient(206.57deg, #2F93E2a3 0%, #0C4470 100%), url(https://images.pexels.com/photos/12124094/pexels-photo-12124094.jpeg?auto=compress&cs=tinysrgb&w=600)',
         backgroundSize: 'cover',
@@ -87,7 +125,7 @@ const App = () => {
         </div>
       </div>
 
-      <Container style={{ marginTop: '-50px', position: 'relative', zIndex: 2, backgroundColor: 'white', padding: '20px', borderRadius: '10px' }}>
+      <Container style={{ marginTop: '-50px', position: 'relative', zIndex: 2, backgroundColor: 'white', padding: '20px', borderRadius: '10px', boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)' }}>
         <Tabs defaultActiveKey="view" id="book-tabs" className="mb-3">
           <Tab eventKey="view" title="View Books">
             {filteredBooks.length === 0 ? (
@@ -106,18 +144,18 @@ const App = () => {
                 </thead>
                 <tbody>
                   {filteredBooks.map((book) => (
-                    <tr key={book.isbn}>
+                    <tr key={book.id}>
                       <td>{book.title}</td>
                       <td>{book.author}</td>
                       <td>{book.publisher}</td>
                       <td>{book.publishedDate}</td>
                       <td>{book.isbn}</td>
                       <td>
-                        <Button variant="warning" size="sm" className="me-2">
-                          <FaEdit />
+                        <Button variant="link" size="sm" className="me-2" onClick={() => handleEdit(book)}>
+                          <FaEdit style={{ color: 'green' }} />
                         </Button>
-                        <Button variant="danger" size="sm">
-                          <FaTrash />
+                        <Button variant="link" size="sm" onClick={() => handleDelete(book.id)}>
+                          <FaTrash style={{ color: 'red' }} />
                         </Button>
                       </td>
                     </tr>
@@ -148,11 +186,67 @@ const App = () => {
                 <Form.Label>ISBN</Form.Label>
                 <Form.Control type="text" value={isbn} onChange={(e) => setIsbn(e.target.value)} required />
               </Form.Group>
-              <Button type="submit" variant="primary">{editBook ? 'Update Book' : 'Add Book'}</Button>
+              <Button type="submit" variant="primary">Add Book</Button>
             </Form>
           </Tab>
         </Tabs>
       </Container>
+
+      <Modal show={showModal} onHide={() => setShowModal(false)}>
+        <Modal.Header closeButton>
+          <Modal.Title>Edit Book</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Form onSubmit={handleSubmit}>
+            <Form.Group className="mb-3">
+              <Form.Label>Title</Form.Label>
+              <Form.Control
+                type="text"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                required
+              />
+            </Form.Group>
+            <Form.Group className="mb-3">
+              <Form.Label>Author</Form.Label>
+              <Form.Control
+                type="text"
+                value={author}
+                onChange={(e) => setAuthor(e.target.value)}
+                required
+              />
+            </Form.Group>
+            <Form.Group className="mb-3">
+              <Form.Label>Publisher</Form.Label>
+              <Form.Control
+                type="text"
+                value={publisher}
+                onChange={(e) => setPublisher(e.target.value)}
+                required
+              />
+            </Form.Group>
+            <Form.Group className="mb-3">
+              <Form.Label>Published Date</Form.Label>
+              <Form.Control
+                type="date"
+                value={publishedDate}
+                onChange={(e) => setPublishedDate(e.target.value)}
+                required
+              />
+            </Form.Group>
+            <Form.Group className="mb-3">
+              <Form.Label>ISBN</Form.Label>
+              <Form.Control
+                type="text"
+                value={isbn}
+                onChange={(e) => setIsbn(e.target.value)}
+                required
+              />
+            </Form.Group>
+            <Button type="submit" variant="primary">Update Book</Button>
+          </Form>
+        </Modal.Body>
+      </Modal>
     </div>
   );
 };
